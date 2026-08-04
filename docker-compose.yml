@@ -1,48 +1,43 @@
 version: '3.8'
 
-networks:
-  backend-network:
-    driver: bridge
-
-volumes:
-  mongo_data:
-    driver: local
-
 services:
-  api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: api-node
-    restart: unless-stopped
-    ports:
-      - "${PORT}:3000"
+  db:
+    image: postgres:15-alpine
+    container_name: postgres-db
+    restart: always
     environment:
-      - NODE_ENV=${NODE_ENV}
-      - PORT=${PORT}
-      - MONGO_URI=mongodb://${MONGO_INITDB_ROOT_USERNAME}:${MONGO_INITDB_ROOT_PASSWORD}@mongo:27017/${MONGO_DB_NAME}?authSource=admin
-    depends_on:
-      mongo:
-        condition: service_healthy
-    networks:
-      - backend-network
-
-  mongo:
-    image: mongo:7.0
-    container_name: mongo-db
-    restart: unless-stopped
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     ports:
-      - "27017:27017"
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
-      MONGO_INITDB_DATABASE: ${MONGO_DB_NAME}
+      - "5434:5432"
     volumes:
-      - mongo_data:/data/db
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
       timeout: 5s
       retries: 5
     networks:
       - backend-network
+
+  api:
+    build: .
+    container_name: api-node
+    restart: always
+    ports:
+      - "${PORT}:${PORT}"
+    env_file:
+      - .env
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - backend-network
+
+volumes:
+  postgres_data:
+
+networks:
+  backend-network:
+    driver: bridge
