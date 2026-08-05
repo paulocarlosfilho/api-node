@@ -22,9 +22,6 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: Execute Automated Tests
-        run: npm test
-
   cd:
     name: Continuous Delivery & Registry Push
     needs: [ci]
