@@ -47,7 +47,7 @@ jobs:
           push: true
           tags: |
             ${{ secrets.DOCKER_API_NODE_LOGIN }}/api-node:latest
-            ${{ secrets.DOCKER_API_NODE_LOGIN }}/api-node:0.1.${{ github.run_number }}
+            ${{ secrets.DOCKER_API_NODE_LOGIN }}/api-node:1.0.${{ github.run_number }}
             ${{ secrets.DOCKER_API_NODE_LOGIN }}/api-node:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
